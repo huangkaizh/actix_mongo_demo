@@ -1,3 +1,8 @@
-pub mod middlewareLocal;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate lazy_static;
+
+pub mod middleware_local;
 pub mod common;
 pub mod controller;

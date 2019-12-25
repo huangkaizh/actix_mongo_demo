@@ -1,0 +1,5 @@
+debug = false
+port = 8080
+host = "0.0.0.0"
+max_age = 100000
+payload_limit_size = 4096

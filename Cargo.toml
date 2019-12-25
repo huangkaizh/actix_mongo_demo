@@ -19,13 +19,14 @@ bytes = "0.4"
 futures = "0.1"
 env_logger = "*"
 
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_derive = "1.0"
+#serde_derive = "1.0"
 json = "*"
 
-wither = "0.8.0"
-wither_derive = "0.8.0"
+#wither = "0.8.0"
+wither = { git = "https://gitee.com/huangkaizh/wither.git", features = ["derive"]}
+#wither_derive = "0.8.0"
 bson = "0.13"
 r2d2 = "0.8.6"
 r2d2-mongodb = "0.2.2"
@@ -41,3 +42,7 @@ hex = "0.4.0"
 chrono = "0.4.9"
 
 reqwest = "0.9.22"
+
+config = "0.10.1"
+lazy_static = "^0.2.8"
+notify = "^4.0.0"

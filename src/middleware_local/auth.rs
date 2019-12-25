@@ -1,30 +1,26 @@
-extern crate actix_web;
-extern crate actix_service;
-
 use actix_service::{Service, Transform};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
 use futures::future::{ok, FutureResult};
 use futures::{Future, Poll};
 use actix_identity::{RequestIdentity, IdentityItem};
 use qstring::QString;
-//use rand::prelude::random;
 use rand::Rng;
 use actix_web::HttpMessage;
 
-const maxAge:i64 = 100000;
+const MAX_AGE:i64 = 100000;
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
 //    next service in chain as parameter.
 // 2. Middleware's call method gets called with normal request.
 pub struct Auth {
-    maxAge: i64
+    max_age: i64
 }
 
 impl Default for Auth {
     fn default() -> Self {
         Auth {
-            maxAge
+            max_age: MAX_AGE
         }
     }
 }
@@ -46,13 +42,13 @@ impl<S, B> Transform<S> for Auth
     type Future = FutureResult<Self::Transform, Self::InitError>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(AuthMiddleware { service, maxAge: self.maxAge })
+        ok(AuthMiddleware { service, max_age: self.max_age })
     }
 }
 
 pub struct AuthMiddleware<S> {
     service: S,
-    maxAge: i64
+    max_age: i64
 }
 
 impl<S, B> Service for AuthMiddleware<S>
@@ -74,30 +70,29 @@ impl<S, B> Service for AuthMiddleware<S>
         println!("Hi from auth. You requested: {}", req.path());
         let identity = req.get_identity();
 
-        if let Some(idStr) = identity {
-            let mut qs = QString::from(idStr.as_str());
-            let mut username = qs.get("username").unwrap();
-            let mut timestampStr = qs.get("timestamp").unwrap();
-            let mut timestamp = timestampStr.to_string().parse::<i64>().unwrap();
-            let mut randomNum = qs.get("randomNum").unwrap();
-            let mut timestamp_now: i64 = chrono::Utc::now().timestamp();
+        if let Some(id_str) = identity {
+            let qs = QString::from(id_str.as_str());
+            let username = qs.get("username").unwrap();
+            let timestamp_str = qs.get("timestamp").unwrap();
+            let timestamp = timestamp_str.to_string().parse::<i64>().unwrap();
+            let timestamp_now: i64 = chrono::Utc::now().timestamp();
             if timestamp > timestamp_now {
                 {
-                    let mut timestamp_new: i64 = timestamp_now + self.maxAge;
-                    let mut randomNum = rand::thread_rng().gen_range(100000000, 999999999);
-                    let mut idStr_new = format!("username={}&timestamp={}&randomNum={}", username, timestamp_new, randomNum);
+                    let timestamp_new: i64 = timestamp_now + self.max_age;
+                    let random_num = rand::thread_rng().gen_range(100000000, 999999999);
+                    let id_str_new = format!("username={}&timestamp={}&random_num={}", username, timestamp_new, random_num);
                     req.extensions_mut()
-                        .insert(IdentityItem { id: Some(idStr_new), changed: true });
+                        .insert(IdentityItem { id: Some(id_str_new), changed: true });
                 }
                 Box::new(self.service.call(req).and_then(|res| {
                     println!("Hi from auth response");
                     Ok(res)
                 }))
             } else {
-                Box::new(futures::future::err(actix_web::error::ErrorRequestTimeout("登录超时")))
+                Box::new(futures::future::err(actix_web::error::ErrorRequestTimeout("timeout")))
             }
         } else {
-            Box::new(futures::future::err(actix_web::error::ErrorUnauthorized("未登录")))
+            Box::new(futures::future::err(actix_web::error::ErrorUnauthorized("unauthorized")))
         }
     }
 }

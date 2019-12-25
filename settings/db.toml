@@ -1,0 +1,6 @@
+mongo_host = "localhost"
+mongo_port = 27017
+mongo_db_name = "actixDemoDb"
+#mongo_username = "root"
+#mongo_password = "password"
+mongo_pool_max_size = 16
