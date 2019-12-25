@@ -18,7 +18,7 @@ pub fn login(id: Identity, item: web::Json<LoginParams>) -> HttpResponse {
         id.remember(id_str.to_owned()); // <- remember identity
         HttpResponse::Ok().json(login_params)
     } else {
-        let err_res  = PrResponse::<String>::error("用户名或密码错误".to_owned());
+        let err_res  = PrResponse::<String>::error("username or password is wrong".to_owned());
         HttpResponse::Ok().json(err_res)
     }
 }
