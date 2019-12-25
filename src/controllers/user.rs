@@ -1,11 +1,14 @@
 use actix_identity::{Identity};
-use crate::common::structs::{LoginParams, PrResponse, MsgObj, Tel, SmsRes};
+use crate::common::pr_response::{PrResponse, error};
+use crate::models::user::{LoginParams, MsgObj, Tel, SmsRes};
 use actix_web::{
-    HttpResponse, web
+    HttpResponse, web, HttpRequest
 };
 use rand::Rng;
-use crate::common::settings::{ DB, SERVER, VERIFY};
+use crate::common::settings::{ SERVER, VERIFY};
 use sha2::{Sha256, Digest};
+use qstring::QString;
+use crate::common::functions::ok_json;
 
 pub fn login(id: Identity, item: web::Json<LoginParams>) -> HttpResponse {
     let login_params = item.0;
@@ -16,9 +19,9 @@ pub fn login(id: Identity, item: web::Json<LoginParams>) -> HttpResponse {
         let random_num = rand::thread_rng().gen_range(100000000, 999999999);
         let id_str = format!("username={}&timestamp={}&random_num={}", login_params.username, timestamp, random_num);
         id.remember(id_str.to_owned()); // <- remember identity
-        HttpResponse::Ok().json(login_params)
+        HttpResponse::Ok().json(PrResponse::ok(login_params))
     } else {
-        let err_res  = PrResponse::<String>::error("username or password is wrong".to_owned());
+        let err_res  = error("username or password is wrong".to_owned());
         HttpResponse::Ok().json(err_res)
     }
 }
@@ -72,4 +75,19 @@ pub fn verify() -> HttpResponse {
                     HttpResponse::Ok().json(sms_res)
                 })
         }).unwrap()
+}
+
+pub fn welcome(_id: Identity) -> HttpResponse {
+    let arr = array!["a", "b", "c"];
+    HttpResponse::Ok().content_type("application/json").body(ok_json(arr))
+}
+
+pub fn with_param(req: HttpRequest, path: web::Path<(String, String)>) -> HttpResponse {
+    println!("{:?}", req);
+    let query_str = req.query_string();
+    println!("query_str: {}", query_str);
+    let qs = QString::from(query_str);
+    let phone = qs.get("phone").unwrap();
+    println!("path: {:#?}", path);
+    HttpResponse::Ok().content_type("text/plain").body(format!("Hello {}!You phone is {}, your nick is {}", path.0, phone, path.1))
 }

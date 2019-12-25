@@ -6,8 +6,7 @@ use actix_identity::{RequestIdentity, IdentityItem};
 use qstring::QString;
 use rand::Rng;
 use actix_web::HttpMessage;
-
-const MAX_AGE:i64 = 100000;
+use crate::common::settings::{SERVER};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -20,7 +19,7 @@ pub struct Auth {
 impl Default for Auth {
     fn default() -> Self {
         Auth {
-            max_age: MAX_AGE
+            max_age: (*SERVER).max_age
         }
     }
 }
@@ -69,7 +68,7 @@ impl<S, B> Service for AuthMiddleware<S>
     fn call(&mut self, req: ServiceRequest) -> Self::Future {
         println!("Hi from auth. You requested: {}", req.path());
         let identity = req.get_identity();
-
+        println!("identity: {:#?}", identity);
         if let Some(id_str) = identity {
             let qs = QString::from(id_str.as_str());
             let username = qs.get("username").unwrap();
@@ -89,7 +88,7 @@ impl<S, B> Service for AuthMiddleware<S>
                     Ok(res)
                 }))
             } else {
-                Box::new(futures::future::err(actix_web::error::ErrorRequestTimeout("timeout")))
+                Box::new(futures::future::err(actix_web::error::ErrorUnauthorized("timeout")))
             }
         } else {
             Box::new(futures::future::err(actix_web::error::ErrorUnauthorized("unauthorized")))

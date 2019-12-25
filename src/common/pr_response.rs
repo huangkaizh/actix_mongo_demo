@@ -16,18 +16,12 @@ impl<T> PrResponse<T> {
             data: Some(data)
         }
     }
-    pub fn timeout(data: T) -> PrResponse<T> {
-        PrResponse {
-            msg: "timeout".to_string(),
-            code: 2,
-            data: Some(data)
-        }
-    }
-    pub fn error(msg: String) -> PrResponse<T> {
-        PrResponse {
-            msg: msg,
-            code: 1,
-            data: None
-        }
+}
+
+pub fn error(msg: String) -> PrResponse<String> {
+    PrResponse {
+        msg: msg,
+        code: 1,
+        data: None
     }
 }

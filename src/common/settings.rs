@@ -1,4 +1,4 @@
-use crate::common::structs::{Db, Server, Settings, Verify};
+use crate::models::common_models::{Db, Server, Verify};
 use config::*;
 
 #[allow(deprecated)]
